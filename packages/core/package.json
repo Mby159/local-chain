@@ -1,0 +1,7 @@
+{
+  "name": "@local-chain/core",
+  "version": "0.1.0",
+  "description": "Lightweight local blockchain engine — zero dependencies",
+  "main": "index.js",
+  "license": "MIT"
+}

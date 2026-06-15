@@ -1,0 +1,9 @@
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+__tmp__/
+__tmp_*/
+.localchain/
+evidence/
+.DS_Store

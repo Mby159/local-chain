@@ -1,0 +1,12 @@
+{
+  "name": "@local-chain/sdk",
+  "version": "0.1.0",
+  "description": "Node.js SDK for LocalChain — integrates core, store, anchor",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@local-chain/core": "workspace:*",
+    "@local-chain/store": "workspace:*",
+    "@local-chain/anchor": "workspace:*"
+  }
+}

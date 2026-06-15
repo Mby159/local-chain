@@ -1,0 +1,16 @@
+{
+  "name": "local-chain",
+  "version": "0.1.0",
+  "description": "Lightweight local blockchain engine — zero-cost, modular, extensible",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node packages/core/__tests__/test.js && node packages/anchor/__tests__/test.js && node packages/sdk/__tests__/test.js",
+    "test:core": "node packages/core/__tests__/test.js",
+    "test:anchor": "node packages/anchor/__tests__/test.js",
+    "test:sdk": "node packages/sdk/__tests__/test.js"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@local-chain/anchor",
+  "version": "0.1.0",
+  "description": "Public chain anchoring plugins for LocalChain",
+  "main": "index.js",
+  "license": "MIT"
+}
