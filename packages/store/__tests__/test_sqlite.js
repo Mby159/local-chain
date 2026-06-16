@@ -4,10 +4,19 @@ const { SQLiteStore } = require('../sqlite')
 
 let passed = 0
 let failed = 0
+let warned = 0
+
+const strictPerf = process.env.LOCAL_CHAIN_STRICT_PERF === '1'
 
 function assert(name, condition) {
   if (condition) { console.log(`  ✓ ${name}`); passed++ }
   else { console.log(`  ✗ ${name}`); failed++ }
+}
+
+function perfCheck(name, condition, detail) {
+  if (condition) { console.log(`  ✓ ${name}`); passed++ }
+  else if (strictPerf) { console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); failed++ }
+  else { console.log(`  ⚠ ${name}${detail ? ` — ${detail}` : ''}`); warned++ }
 }
 
 const tmpDir = path.join(__dirname, '__tmp_sqlite__')
@@ -80,7 +89,7 @@ for (let i = 0; i < 1000; i++) {
 }
 const elapsed = Date.now() - start
 console.log(`  ⏱ 1000 inserts: ${elapsed}ms`)
-assert('1000 inserts < 5s', elapsed < 5000)
+perfCheck('1000 inserts < 5s', elapsed < 5000, 'performance warning only; set LOCAL_CHAIN_STRICT_PERF=1 to fail')
 assert('count 1000', perfStore.count() === 1000)
 
 const searchStart = Date.now()
@@ -89,10 +98,11 @@ for (let i = 0; i < 100; i++) {
 }
 const searchElapsed = Date.now() - searchStart
 console.log(`  ⏱ 100 searches: ${searchElapsed}ms`)
-assert('100 searches < 2s', searchElapsed < 2000)
+perfCheck('100 searches < 2s', searchElapsed < 2000, 'performance warning only; set LOCAL_CHAIN_STRICT_PERF=1 to fail')
 
 perfStore.close()
 
-console.log(`\n═══ SQLite Results: ${passed} passed, ${failed} failed ═══\n`)
+const warningText = warned ? `, ${warned} warned` : ''
+console.log(`\n═══ SQLite Results: ${passed} passed, ${failed} failed${warningText} ═══\n`)
 fs.rmSync(tmpDir, { recursive: true, force: true })
 process.exit(failed > 0 ? 1 : 0)

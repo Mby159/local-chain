@@ -7,10 +7,16 @@
   "workspaces": [
     "packages/*"
   ],
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
-    "test": "node packages/core/__tests__/test.js && node packages/anchor/__tests__/test.js && node packages/sdk/__tests__/test.js",
+    "test": "npm run test:core && npm run test:anchor && npm run test:sdk && npm run test:server && npm run test:store",
     "test:core": "node packages/core/__tests__/test.js",
     "test:anchor": "node packages/anchor/__tests__/test.js",
-    "test:sdk": "node packages/sdk/__tests__/test.js"
+    "test:sdk": "node packages/sdk/__tests__/test.js",
+    "test:server": "node packages/server/__tests__/test.js",
+    "test:store": "NODE_OPTIONS=--experimental-sqlite node packages/store/__tests__/test_sqlite.js",
+    "benchmark:store": "LOCAL_CHAIN_STRICT_PERF=1 NODE_OPTIONS=--experimental-sqlite node packages/store/__tests__/test_sqlite.js"
   }
 }
