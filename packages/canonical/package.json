@@ -1,0 +1,10 @@
+{
+  "name": "@local-chain/canonical",
+  "version": "0.1.0",
+  "description": "Canonical JSON (CJSON) for the LocalChain hash domain -- see ailog/spec/FORMAT.md",
+  "main": "index.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

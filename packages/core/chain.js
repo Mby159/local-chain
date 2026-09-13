@@ -3,6 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const { Block } = require('./block')
 const { MerkleTree, sha256 } = require('./merkle')
+const { canonicalJson, canonicalSha256 } = require('../canonical')
 
 class Chain {
   constructor(chainDir, opts = {}) {
@@ -32,7 +33,7 @@ class Chain {
 
   addBlock(records) {
     const last = this.chain[this.chain.length - 1]
-    const tree = new MerkleTree(records.map(r => JSON.stringify(r)))
+    const tree = new MerkleTree(records.map(r => canonicalJson(r)))
     const merkleRoot = tree.getRoot()
     const block = new Block(last.index + 1, { type: 'batch', records, merkleRoot }, last.hash)
     block.mineBlock(this.difficulty)
@@ -66,7 +67,7 @@ class Chain {
   getProof(blockIndex, leafIndex) {
     const block = this.chain[blockIndex]
     if (!block || !block.data.records) return null
-    const tree = new MerkleTree(block.data.records.map(r => JSON.stringify(r)))
+    const tree = new MerkleTree(block.data.records.map(r => canonicalJson(r)))
     return tree.getProof(leafIndex)
   }
 
@@ -75,7 +76,7 @@ class Chain {
     if (!block || !block.merkleRoot) return false
     const proof = this.getProof(blockIndex, leafIndex)
     if (!proof) return false
-    const leafHash = sha256(JSON.stringify(record))
+    const leafHash = canonicalSha256(record)
     return MerkleTree.verifyProof(leafHash, proof, block.merkleRoot)
   }
 

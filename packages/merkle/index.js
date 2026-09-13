@@ -1,4 +1,5 @@
 const crypto = require('crypto')
+const { canonicalJson } = require('../canonical')
 
 function sha256(data) {
   return crypto.createHash('sha256').update(data).digest('hex')
@@ -64,7 +65,7 @@ class MerkleTree {
 }
 
 function buildFromRecords(records) {
-  const leaves = records.map(r => sha256(JSON.stringify(r)))
+  const leaves = records.map(r => canonicalJson(r))
   return new MerkleTree(leaves)
 }
 

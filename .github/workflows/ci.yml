@@ -16,6 +16,14 @@ jobs:
         node-version: [22, 24]
     steps:
       - uses: actions/checkout@v4
+
+      # ailog owns spec/canonical-vectors.json; canonical tests skip (loudly)
+      # without it, so check it out as a sibling to actually verify conformance.
+      - uses: actions/checkout@v4
+        with:
+          repository: Mby159/ailog
+          path: ailog
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
