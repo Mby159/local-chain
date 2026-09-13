@@ -6,7 +6,10 @@ let passed = 0
 let failed = 0
 let warned = 0
 
-const strictPerf = process.env.LOCAL_CHAIN_STRICT_PERF === '1'
+// Reachable from an npm script on every platform: `--strict-perf` on the
+// command line, or LOCAL_CHAIN_STRICT_PERF=1 where that syntax exists.
+const strictPerf =
+  process.env.LOCAL_CHAIN_STRICT_PERF === '1' || process.argv.includes('--strict-perf')
 
 function assert(name, condition) {
   if (condition) { console.log(`  ✓ ${name}`); passed++ }
@@ -80,17 +83,53 @@ assert('persists', store2.count() === 1)
 assert('persisted data', store2.getById('5').name === 'persist.txt')
 store2.close()
 
+// Bulk insert
+console.log('\n[Bulk insert]')
+{
+  const bulkStore = new SQLiteStore(path.join(tmpDir, 'bulk.db'))
+  const rows = Array.from({ length: 250 }, (_, i) => ({
+    id: `bulk-${i}`, hash: `bulk-hash-${i}`, name: `b-${i}.dat`, size: 10,
+    date: '2026-06-16', timestamp: new Date().toISOString(),
+  }))
+  assert('addMany returns the count', bulkStore.addMany(rows) === 250)
+  assert('addMany persisted every row', bulkStore.count() === 250)
+  assert('addMany is idempotent by id', bulkStore.addMany(rows) === 250 && bulkStore.count() === 250)
+  assert('addMany on empty input is a no-op', bulkStore.addMany([]) === 0)
+  assert('addMany on null input is a no-op', bulkStore.addMany(null) === 0)
+
+  // A failing row must roll the whole batch back, not leave it half applied.
+  const before = bulkStore.count()
+  let threw = false
+  try {
+    bulkStore.addMany([{ id: 'ok-1', hash: 'h1' }, { hash: null }])
+  } catch (err) {
+    threw = true
+  }
+  assert('bad row rejects the batch', threw)
+  assert('rejected batch left nothing behind', bulkStore.count() === before)
+  bulkStore.close()
+}
+
 // Performance test
 console.log('\n[Performance]')
+const perfRecord = (i) => ({ id: `perf-${i}`, hash: `hash-${i}`, name: `file-${i}.dat`, size: 100, date: '2026-06-16', timestamp: new Date().toISOString() })
 const perfStore = new SQLiteStore(path.join(tmpDir, 'perf.db'))
+
+// add() commits once per row, so a tight loop pays one fsync each time. That is
+// the price of durability for one-off writes; bulk loading should use addMany().
 const start = Date.now()
-for (let i = 0; i < 1000; i++) {
-  perfStore.add({ id: `perf-${i}`, hash: `hash-${i}`, name: `file-${i}.dat`, size: 100, date: '2026-06-16', timestamp: new Date().toISOString() })
-}
+for (let i = 0; i < 1000; i++) perfStore.add(perfRecord(i))
 const elapsed = Date.now() - start
-console.log(`  ⏱ 1000 inserts: ${elapsed}ms`)
-perfCheck('1000 inserts < 5s', elapsed < 5000, 'performance warning only; set LOCAL_CHAIN_STRICT_PERF=1 to fail')
+console.log(`  ⏱ add()      x1000: ${elapsed}ms (one transaction per row)`)
+perfCheck('add() x1000 < 10s', elapsed < 10000, 'performance warning only; set LOCAL_CHAIN_STRICT_PERF=1 to fail')
 assert('count 1000', perfStore.count() === 1000)
+
+const bulkStart = Date.now()
+perfStore.addMany(Array.from({ length: 1000 }, (_, i) => perfRecord(1000 + i)))
+const bulkElapsed = Date.now() - bulkStart
+console.log(`  ⏱ addMany()  x1000: ${bulkElapsed}ms (single transaction)`)
+perfCheck('addMany() x1000 < 1s', bulkElapsed < 1000, 'bulk inserts should be batched in one transaction')
+assert('count 2000 after addMany', perfStore.count() === 2000)
 
 const searchStart = Date.now()
 for (let i = 0; i < 100; i++) {

@@ -26,19 +26,49 @@ class SQLiteStore {
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_hash ON records(hash)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_date ON records(date)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_block ON records(block_index)`)
-  }
 
-  add(record) {
-    this.db.prepare(`
+    // Prepared once: node:sqlite has no statement cache, and add() is called
+    // once per record.
+    this._insertStmt = this.db.prepare(`
       INSERT OR REPLACE INTO records (id, hash, name, type, size, algorithm, signature, cid, block_index, timestamp, date, data)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    `)
+  }
+
+  _bindInsert(record) {
+    return [
       record.id, record.hash, record.name || null, record.type || null, record.size || 0,
       record.algorithm || null, record.signature || null, record.cid || null,
       record.blockIndex != null ? record.blockIndex : null, record.timestamp || null, record.date || null,
-      JSON.stringify(record)
-    )
+      JSON.stringify(record),
+    ]
+  }
+
+  add(record) {
+    this._insertStmt.run(...this._bindInsert(record))
     return record
+  }
+
+  /**
+   * Insert many records in a single transaction.
+   *
+   * add() commits per row, so a tight loop pays one fsync per record. Batching
+   * a corpus through a transaction is orders of magnitude faster and is what
+   * indexing a real vault should use.
+   */
+  addMany(records) {
+    const list = Array.from(records || [])
+    if (list.length === 0) return 0
+
+    this.db.exec('BEGIN')
+    try {
+      for (const record of list) this._insertStmt.run(...this._bindInsert(record))
+      this.db.exec('COMMIT')
+    } catch (err) {
+      this.db.exec('ROLLBACK')
+      throw err
+    }
+    return list.length
   }
 
   getAll() {

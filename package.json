@@ -17,7 +17,7 @@
     "test:anchor": "node packages/anchor/__tests__/test.js",
     "test:sdk": "node packages/sdk/__tests__/test.js",
     "test:server": "node packages/server/__tests__/test.js",
-    "test:store": "NODE_OPTIONS=--experimental-sqlite node packages/store/__tests__/test_sqlite.js",
-    "benchmark:store": "LOCAL_CHAIN_STRICT_PERF=1 NODE_OPTIONS=--experimental-sqlite node packages/store/__tests__/test_sqlite.js"
+    "test:store": "node --experimental-sqlite packages/store/__tests__/test_sqlite.js",
+    "benchmark:store": "node --experimental-sqlite packages/store/__tests__/test_sqlite.js --strict-perf"
   }
 }
