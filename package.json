@@ -11,9 +11,10 @@
     "node": ">=22.5.0"
   },
   "scripts": {
-    "test": "npm run test:core && npm run test:canonical && npm run test:anchor && npm run test:sdk && npm run test:server && npm run test:store",
+    "test": "npm run test:core && npm run test:canonical && npm run test:merkle && npm run test:anchor && npm run test:sdk && npm run test:server && npm run test:store",
     "test:core": "node packages/core/__tests__/test.js",
     "test:canonical": "node packages/canonical/__tests__/test.js",
+    "test:merkle": "node packages/merkle/__tests__/test.js",
     "test:anchor": "node packages/anchor/__tests__/test.js",
     "test:sdk": "node packages/sdk/__tests__/test.js",
     "test:server": "node packages/server/__tests__/test.js",
