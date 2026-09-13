@@ -1,0 +1,10 @@
+{
+  "name": "@local-chain/merkle",
+  "version": "0.1.0",
+  "description": "Zero-dependency Merkle tree implementation for LocalChain",
+  "main": "index.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}
